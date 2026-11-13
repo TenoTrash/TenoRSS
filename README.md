@@ -1,6 +1,6 @@
 # TenoRSS (alfa)
 
-Lector RSS para M5Stack Cardputer ADV. PlatformIO + M5Cardputer/M5Unified/M5GFX.
+Lector RSS para M5Stack Cardputer ADV. PlatformIO + M5Cardputer/M5Unified/M5GFX
 
 | Inicio | Actualizando | Lectura | QR |
 |---|---|---|---|
