@@ -1,0 +1,56 @@
+Quisiera hacer un RSS reader para cardputer ADV, bastante sencillo.
+Compila todo con platformio (ya está instalado) y cuando termines deja un binario precompilado en este mismo directorio.
+El nombre del proyecto es "TenoRSS"
+
+Pantalla 1:
+
+En texto grande y centrado, color verde matrix y fondo negro, con el texto:
+
+RSS Cardputer
+by Teno
+
+El texto de abajo debe ser ligeramente menor que el de arriba.
+
+Pantalla 2:
+
+Status Bar - Indicador WiFi - fecha y hora por NTP - Indicador Bateria
+
+RRS (ver los feeds y poder leerlos)
+Update (actualiza los feeds)
+WiFi Setup (setup de redes wifi)
+
+Pantalla RSS:
+Mostrar las fuentes y los contenidos más actualizados que tenga
+
+Pantalla WiFi Setup:
+Escanear las wifi y que al apretar enter permita ingresar la contraseña.
+Borrar wifis viejas o mal configuradas
+
+En la microSD se debe generar un directorio "RSSreader" con tres archivos, incluso editable a mano por el usuario:
+wifi-config.txt
+Estructura sugerida:
+[wifi 1]
+SSID="ssid red wifi1"
+PASS="password wifi1"
+
+[wifi 2]
+SSID="ssid red wifi2"
+PASS="password wifi2"
+
+RSS.txt
+[Microsoft Admin Center Status]
+URL="https://status.cloud.microsoft/api/feed/mac"
+(inclui al menos 5 ejemplos de feeds RSS)
+
+
+cache.json (archivo de cache, escucho tus sugerencias de como manejarlo)
+
+El flujo de trabajo debe ser el siguiente:
+Arranca la app
+Se conecta a alguna wifi conocida y en el status bar pone un icono verde de wifi. Caso contrario, icono de wifi rojo.
+Entra el menú y actualiza los feeds en background
+Si el usuario entra en RSS, que diga "Actualizando..."
+Si el usuario entra en Update, que diga Actualizando..."
+Si está actualizando y el usuario entra a WiFi, que diga "Actualizando..."
+
+Haceme todas las preguntas que necesites, de a una.
