@@ -54,6 +54,11 @@ uint8_t g_tzTries = 0;
 bool g_ntpStarted = false;
 bool g_wasUp = false;
 bool g_connecting = false;
+bool g_radioOff = false;       // radio apagada por inactividad
+bool g_offArmed = false;       // esta corriendo el plazo para apagarla
+uint32_t g_offAt = 0;          // desde cuando corre
+volatile bool g_hold = false;  // la interfaz esta en WiFi Setup: no apagar
+bool g_holdSeen = false;
 volatile uint8_t g_discReason = 0;
 uint8_t g_buf[1460];
 
@@ -88,11 +93,13 @@ std::string currentTzString() {
   return dt::posixFromOffset(g_tzDetected ? g_tzOffset : cfg::kDefaultTzOffset);
 }
 
+bool wifiUp() { return !g_radioOff && WiFi.status() == WL_CONNECTED; }
+
 void publishWifi() {
-  const bool up = WiFi.status() == WL_CONNECTED;
+  const bool up = wifiUp();
   const int rssi = up ? WiFi.RSSI() : 0;
   const String ssid = up ? WiFi.SSID() : String();
-  const WifiState ws = up ? W_UP : (g_connecting ? W_CONNECTING : W_DOWN);
+  const WifiState ws = up ? W_UP : (g_connecting ? W_CONNECTING : (g_radioOff ? W_SLEEP : W_DOWN));
   Lock l;
   if (ws != g_st.wifi || strcmp(ssid.c_str(), g_st.ssid) != 0 || rssiBars(rssi) != rssiBars(g_st.rssi)) {
     g_st.wifi = ws;
@@ -102,7 +109,30 @@ void publishWifi() {
   }
 }
 
+void radioOn() {
+  if (!g_radioOff) return;
+  g_radioOff = false;
+  WiFi.mode(WIFI_STA);
+  delay(100);
+  logf("[wifi] radio encendida");
+}
+
+void radioOff() {
+  if (g_radioOff) return;
+  WiFi.disconnect(true, false);
+  WiFi.mode(WIFI_OFF);  // por si disconnect() no llego a apagarla
+  g_radioOff = true;
+  logf("[wifi] radio apagada por inactividad");
+}
+
+// Arranca (o reinicia) el plazo para apagar la radio.
+void armIdleOff() {
+  g_offAt = millis();
+  g_offArmed = true;
+}
+
 bool tryConnect(const std::string& ssid, const std::string& pass, uint32_t timeoutMs) {
+  radioOn();
   logf("[wifi] conectando a \"%s\"", ssid.c_str());
   g_discReason = 0;
   WiFi.disconnect(false, false);
@@ -127,6 +157,7 @@ bool tryConnect(const std::string& ssid, const std::string& pass, uint32_t timeo
 }
 
 int scanNetworks() {
+  radioOn();
   int n = WiFi.scanNetworks(false, false, false, 120);
   if (n < 0) {  // suele fallar si habia un intento de conexion en curso
     WiFi.disconnect(false, false);
@@ -138,7 +169,7 @@ int scanNetworks() {
 
 // Conecta a la red conocida que se vea con mejor senal.
 bool ensureWifi() {
-  if (WiFi.status() == WL_CONNECTED) return true;
+  if (wifiUp()) return true;
   std::vector<WifiNet> known;
   {
     Lock l;
@@ -854,6 +885,7 @@ void workerTask(void*) {
         case CMD_BOOT:
         case CMD_UPDATE:
           runUpdate();
+          armIdleOff();
           break;
         case CMD_SCAN:
           runScan();
@@ -863,9 +895,21 @@ void workerTask(void*) {
           break;
       }
     }
+    // WiFi Setup abierto: se retoma la conexion y la radio queda encendida;
+    // al salir vuelve a correr el plazo de apagado.
+    const bool hold = g_hold;
+    if (hold != g_holdSeen) {
+      g_holdSeen = hold;
+      if (hold) ensureWifi();
+      else armIdleOff();
+    }
+    if (g_offArmed && !hold && millis() - g_offAt >= cfg::kWifiIdleOffMs && uxQueueMessagesWaiting(g_queue) == 0) {
+      g_offArmed = false;
+      radioOff();
+    }
     publishWifi();
     // conexion establecida fuera de un Update (WiFi Setup o reconexion): hora y zona
-    const bool up = WiFi.status() == WL_CONNECTED;
+    const bool up = wifiUp();
     if (up && (!g_wasUp || !g_ntpStarted || g_tzPending)) {
       static uint32_t lastTry = 0;
       if (!g_wasUp || millis() - lastTry > 60000) {
@@ -989,6 +1033,8 @@ void setKnown(const std::vector<WifiNet>& known) {
   Lock l;
   g_known = known;
 }
+
+void holdWifi(bool on) { g_hold = on; }
 
 void getScan(std::vector<ScanNet>& out) {
   out.clear();

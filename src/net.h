@@ -15,7 +15,9 @@
 
 namespace net {
 
-enum WifiState : uint8_t { W_DOWN = 0, W_CONNECTING = 1, W_UP = 2 };
+// W_SLEEP: radio apagada para ahorrar bateria; se enciende sola antes de un
+// Update o al entrar a WiFi Setup.
+enum WifiState : uint8_t { W_DOWN = 0, W_CONNECTING = 1, W_UP = 2, W_SLEEP = 3 };
 enum Phase : uint8_t { PH_IDLE = 0, PH_WIFI, PH_TIME, PH_FEEDS, PH_SAVE };
 enum ConnState : uint8_t { CONN_IDLE = 0, CONN_BUSY, CONN_OK, CONN_FAIL };
 enum UpdateOutcome : uint8_t { UP_NEVER = 0, UP_DONE, UP_NO_WIFI, UP_NO_FEEDS, UP_SD_ERROR };
@@ -74,6 +76,9 @@ void requestScan();
 void requestConnect(const std::string& ssid, const std::string& pass);
 void clearConnResult();
 void setKnown(const std::vector<WifiNet>& known);
+// La interfaz esta (o dejo de estar) en WiFi Setup. Mientras esta, la radio
+// queda encendida y se retoma la conexion; al salir corre el plazo de apagado.
+void holdWifi(bool on);
 
 void getScan(std::vector<ScanNet>& out);
 void getResults(std::vector<FeedResult>& out);

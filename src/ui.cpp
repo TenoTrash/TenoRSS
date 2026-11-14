@@ -238,6 +238,8 @@ const int kTextW = 228;  // ancho de texto en la vista de lectura
 void go(Screen s) {
   g_scr = s;
   g_dirty = true;
+  // en las pantallas de WiFi Setup la radio tiene que estar encendida
+  net::holdWifi(s == SC_WIFI || s == SC_PASS || s == SC_CONNECT || s == SC_CONFIRM);
 }
 
 void message(const char* title, const char* body, Screen next) {
@@ -572,6 +574,8 @@ void drawWifiIcon(int x, int y) {
   } else if (g_st.wifi == net::W_CONNECTING) {
     off = C_DKRED;
     lit = (int)((g_anim / 2) % 4);
+  } else if (g_st.wifi == net::W_SLEEP) {
+    on = off = C_AMBER;  // radio apagada hasta el proximo Update
   }
   canvas.fillArc(cx, cy, 11, 10, 225, 315, lit >= 3 ? on : off);
   canvas.fillArc(cx, cy, 8, 7, 225, 315, lit >= 2 ? on : off);
@@ -726,6 +730,7 @@ void drawMenu() {
     } else {
       if (g_st.wifi == net::W_UP) info = g_st.ssid;
       else if (g_st.wifi == net::W_CONNECTING) info = "conectando…";
+      else if (g_st.wifi == net::W_SLEEP) info = "en reposo";
       else info = "sin conexión";
     }
     const int labelW = strWidth(kLabels[i], F_SMALL) * 2;

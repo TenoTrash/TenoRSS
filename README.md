@@ -1,6 +1,6 @@
 # TenoRSS (alfa)
 
-Lector RSS para M5Stack Cardputer ADV. PlatformIO + M5Cardputer/M5Unified/M5GFX
+Lector RSS para M5Stack Cardputer ADV. PlatformIO + M5Cardputer/M5Unified/M5GFX.
 
 | Inicio | Actualizando | Lectura | QR |
 |---|---|---|---|
@@ -27,6 +27,10 @@ ya se conecta y actualiza). Teclas: `;` arriba, `.` abajo, `,` izquierda, `/` de
 `` ` `` (esc) o G0 volver. En lectura: espacio/Enter página siguiente,
 `,` `/` ítem anterior/siguiente, `Q` QR del link (verde sobre negro). En WiFi Setup: `R` buscar,
 Del borrar una red guardada; al tipear la clave, Fn+esc cancela.
+
+Un minuto después de terminar un Update la WiFi se apaga para ahorrar batería y el
+ícono pasa a amarillo. Se vuelve a conectar sola antes del próximo Update o al entrar
+a WiFi Setup (al salir de ahí corre otra vez el minuto).
 
 En la microSD se crea `RSSreader/` con:
 

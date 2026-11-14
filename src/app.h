@@ -31,6 +31,7 @@ static const int32_t kDefaultTzOffset = -3 * 3600;
 static const char* const kUserAgent = "Mozilla/5.0 (compatible; RSS reader)";
 static const char* const kTzUrl = "http://ip-api.com/json/?fields=status,offset";
 static const uint32_t kWifiConnectMs = 12000;    // espera por cada red conocida
+static const uint32_t kWifiIdleOffMs = 60000;    // tras un Update (o salir de WiFi Setup) se apaga la radio
 static const uint32_t kHttpConnectMs = 8000;
 static const uint32_t kHttpStallMs = 10000;      // sin recibir datos
 static const uint32_t kFeedDeadlineMs = 45000;   // tiempo total por feed
